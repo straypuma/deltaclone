@@ -215,10 +215,13 @@ enum Pref {
     static let menuBarShowsTotal = "menuBarShowsTotal"
     static let apiKey = "coingeckoAPIKey"
     static let lastSection = "lastSection"
+    static let secondaryCurrency = "secondaryCurrency"  // clicking net worth switches to it
+    static let showsSecondaryCurrency = "showsSecondaryCurrency"
     static let storeInICloud = "storeInICloud"          // what the user chose in Settings
     static let portfolioInICloud = "portfolioInICloud"  // the real copy has moved to iCloud Drive
 
     static var defaultCurrency: String { Locale.current.currency?.identifier ?? "USD" }
+    static var defaultSecondaryCurrency: String { defaultCurrency == "USD" ? "EUR" : "USD" }
 
     /// The app's preferences. UI tests get a fresh throwaway suite so real settings are never touched.
     /// (UserDefaults is thread-safe; it just isn't annotated Sendable.)

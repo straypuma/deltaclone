@@ -4,6 +4,7 @@ struct SettingsView: View {
     @Environment(PortfolioStore.self) private var store
     @Environment(AppUpdater.self) private var updater
     @AppStorage(Pref.baseCurrency, store: Pref.defaults) private var base = Pref.defaultCurrency
+    @AppStorage(Pref.secondaryCurrency, store: Pref.defaults) private var secondary = Pref.defaultSecondaryCurrency
     @AppStorage(Pref.refreshMinutes, store: Pref.defaults) private var refreshMinutes = 5
     @AppStorage(Pref.showMenuBarExtra, store: Pref.defaults) private var showMenuBarExtra = false
     @AppStorage(Pref.menuBarShowsTotal, store: Pref.defaults) private var menuBarShowsTotal = true
@@ -24,6 +25,8 @@ struct SettingsView: View {
         Form {
             Section {
                 CurrencyPicker(title: "Display currency", selection: $base, rates: store.market.usdRates)
+                CurrencyPicker(title: "Second currency", selection: $secondary, rates: store.market.usdRates)
+                    .help("Click your net worth on the Overview to switch to it")
                 Picker("Refresh prices", selection: $refreshMinutes) {
                     Text("Every minute").tag(1)
                     Text("Every 5 minutes").tag(5)

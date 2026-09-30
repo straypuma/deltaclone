@@ -142,6 +142,7 @@ final class PortfolioStore {
         let api = MarketAPI(apiKey: Pref.defaults.string(forKey: Pref.apiKey))
         var coinIDs = Set(portfolio.crypto.map(\.coinID))
         if !portfolio.nfts.isEmpty { coinIDs.insert("ethereum") }  // NFT floors are priced in ETH
+        coinIDs.insert("bitcoin")                                   // net worth is also shown in BTC
         let collections = Set(portfolio.nfts.map(\.collection)).sorted { $0.rawValue < $1.rawValue }
         var failure: String?
 

@@ -5,6 +5,8 @@ struct OverviewView: View {
     let valuation: Valuation
     @Environment(Navigator.self) private var navigator
     @AppStorage(Pref.hideBalances, store: Pref.defaults) private var hideBalances = false
+    @AppStorage(Pref.secondaryCurrency, store: Pref.defaults) private var secondary = Pref.defaultSecondaryCurrency
+    @AppStorage(Pref.showsSecondaryCurrency, store: Pref.defaults) private var showsSecondary = false
     @State private var range: ChartRange = .week
     @State private var hoverDate: Date?
 
@@ -60,30 +62,63 @@ struct OverviewView: View {
         return (last.value - first.value, first.value > 0 ? (last.value - first.value) / first.value * 100 : nil)
     }
 
+    // MARK: Header currency
+
+    /// Clicking the net worth switches the header to the second currency from Settings.
+    private var headerCurrency: String {
+        showsSecondary && valuation.converted(1, to: secondary) != nil ? secondary : valuation.base
+    }
+
+    private func inHeaderCurrency(_ amount: Double) -> Double {
+        valuation.converted(amount, to: headerCurrency) ?? amount
+    }
+
+    private var btcWorth: Double? {
+        let value = hovered?.value ?? valuation.total
+        guard let price = hovered?.btcPrice ?? valuation.btcPrice, price > 0 else { return nil }
+        return value / price
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(hovered.map { $0.date.formatted(.dateTime.weekday(.abbreviated).day().month().hour().minute()) } ?? "Net Worth")
+            Text(hovered.map { $0.date.formatted(.dateTime.weekday(.abbreviated).day().month().hour().minute()) }
+                 ?? (headerCurrency == valuation.base ? "Net Worth" : "Net Worth · \(headerCurrency)"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Text(Format.money(hovered?.value ?? valuation.total, valuation.base))
+            Text(Format.money(inHeaderCurrency(hovered?.value ?? valuation.total), headerCurrency))
                 .font(.system(size: 46, weight: .semibold, design: .rounded))
                 .monospacedDigit()
                 .contentTransition(.numericText())
                 .privacySensitive()
+                .contentShape(.rect)
+                .onTapGesture {
+                    guard secondary != valuation.base else { return }
+                    withAnimation(.snappy) { showsSecondary.toggle() }
+                }
+                .pointerStyle(.link)
+                .help(secondary == valuation.base ? "" : "Click to show in \(headerCurrency == valuation.base ? secondary : valuation.base)")
+            if let btcWorth {
+                Text("≈ \(Format.btc(btcWorth))")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                    .privacySensitive()
+            }
             if let (amount, percent) = rangeChange {
                 HStack(spacing: 6) {
-                    ChangeLabel(percent: percent, amount: amount, currency: valuation.base)
+                    ChangeLabel(percent: percent, amount: inHeaderCurrency(amount), currency: headerCurrency)
                     Text("Past week").foregroundStyle(.secondary)
                 }
             } else {
                 HStack(spacing: 6) {
-                    ChangeLabel(percent: valuation.change24hPercent, amount: valuation.change24h, currency: valuation.base)
+                    ChangeLabel(percent: valuation.change24hPercent, amount: inHeaderCurrency(valuation.change24h), currency: headerCurrency)
                     Text("Today").foregroundStyle(.secondary)
                 }
             }
             if let profit = valuation.cryptoProfit {
                 HStack(spacing: 6) {
-                    ChangeLabel(percent: profit.percent ?? 0, amount: profit.total, currency: valuation.base)
+                    ChangeLabel(percent: profit.percent ?? 0, amount: inHeaderCurrency(profit.total), currency: headerCurrency)
                     Text("All-time crypto profit").foregroundStyle(.secondary)
                     if profit.includesEstimates {
                         Text("· includes estimates")

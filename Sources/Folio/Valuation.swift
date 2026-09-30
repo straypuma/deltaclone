@@ -66,6 +66,7 @@ struct NFTGroup: Identifiable {
 struct HistoryPoint: Identifiable {
     let date: Date
     let value: Double
+    var btcPrice: Double? = nil     // one BTC at that moment, in the display currency
     var id: Date { date }
 }
 
@@ -96,6 +97,17 @@ struct Valuation {
     let cryptoProfit: (total: Double, percent: Double?, includesEstimates: Bool)?
     /// Crypto holdings left out of `cryptoProfit` because a price is missing.
     let holdingsWithoutCost: Int
+    /// One BTC in the display currency, for showing net worth in bitcoin.
+    let btcPrice: Double?
+    private let usdRates: [String: Double]
+
+    /// An amount in the display currency, converted to `currency` at today's rate.
+    func converted(_ amount: Double, to currency: String) -> Double? {
+        if currency == base { return amount }
+        guard let from = base == "USD" ? 1 : usdRates[base], from > 0,
+              let to = currency == "USD" ? 1 : usdRates[currency] else { return nil }
+        return amount / from * to
+    }
     private let totals: [AssetCategory: Double]
     private let changes: [AssetCategory: Double]
 
@@ -175,14 +187,16 @@ struct Valuation {
         let start = total - change24h
         change24hPercent = start > 0 ? change24h / start * 100 : nil
 
+        usdRates = m.usdRates
+        btcPrice = toBase(m.coins["bitcoin"]?.price)
         history = Self.history(portfolio: p, market: m, usdToBase: usdToBase,
-                               flat: totals[.cash] ?? 0, current: total)
+                               flat: totals[.cash] ?? 0, current: total, currentBTC: btcPrice)
         assets = Self.assetLines(crypto: crypto, cash: cash, nfts: nftGroups)
     }
 
     /// Last 7 days of portfolio value using current quantities and CoinGecko's hourly sparklines.
     private static func history(portfolio p: Portfolio, market m: MarketData, usdToBase: Double?,
-                                flat: Double, current: Double) -> [HistoryPoint] {
+                                flat: Double, current: Double, currentBTC: Double?) -> [HistoryPoint] {
         guard let usdToBase else { return [] }
         var series: [(quantity: Double, prices: [Double])] = []
         for h in p.crypto {
@@ -196,11 +210,13 @@ struct Valuation {
         }
         guard let n = series.map(\.prices.count).min(), n > 1 else { return [] }
         let end = m.updated ?? .now
+        let btc = m.coins["bitcoin"]?.sparkline ?? []
         var points = (0..<n).map { i in
             let usd = series.reduce(0) { $0 + $1.quantity * $1.prices[$1.prices.count - n + i] }
-            return HistoryPoint(date: end.addingTimeInterval(-Double(n - 1 - i) * 3600), value: usd * usdToBase + flat)
+            return HistoryPoint(date: end.addingTimeInterval(-Double(n - 1 - i) * 3600), value: usd * usdToBase + flat,
+                                btcPrice: btc.count >= n ? btc[btc.count - n + i] * usdToBase : nil)
         }
-        points[n - 1] = HistoryPoint(date: end, value: current)
+        points[n - 1] = HistoryPoint(date: end, value: current, btcPrice: currentBTC)
         return points
     }
 

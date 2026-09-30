@@ -46,6 +46,11 @@ enum Format {
         fraction.formatted(.percent.precision(.fractionLength(fraction < 0.1 ? 1 : 0)))
     }
 
+    static func btc(_ value: Double) -> String {
+        let precision: NumberFormatStyleConfiguration.Precision = value >= 1 ? .fractionLength(4) : .significantDigits(4)
+        return value.formatted(.number.precision(precision)) + " BTC"
+    }
+
     static func eth(_ value: Double) -> String {
         value.formatted(.number.precision(.significantDigits(1...4))) + " ETH"
     }
