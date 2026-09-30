@@ -27,6 +27,18 @@ dropped into `Sources/…` or `Tests/…` are picked up automatically.
 | `Tests/FolioUITests` | UI tests: add / edit / delete for every asset type, transactions, conversion, persistence |
 | `Support` | Widget Info.plist + entitlements, icon layer generator |
 
+## Sharing with a friend
+
+`./build.sh --dmg` makes `build/Folio.dmg` (~3 MB). Send it however you like (AirDrop, Messages,
+a cloud link). It needs an Apple Silicon Mac on macOS 15 or later.
+
+Builds are signed with a free Apple account, so the first time they open it macOS shows
+“Folio Not Opened”. They click **Done**, then go to **System Settings ▸ Privacy & Security**, scroll
+down to “Folio was blocked…”, click **Open Anyway** and confirm. After that it opens normally.
+Their portfolio is their own, stored in their iCloud Drive. Updates mean sending a new DMG.
+
+(A paid Apple Developer Program membership would allow a notarized build that opens without that step.)
+
 ## Transactions
 
 Double-click any crypto or cash holding to open it. You'll see its balance and a transaction list:

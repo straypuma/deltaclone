@@ -2,6 +2,7 @@
 # Builds Folio.app (Apple Silicon, release) with Xcode.
 #   ./build.sh            → build/Folio.app
 #   ./build.sh --install  → also copies it to /Applications
+#   ./build.sh --dmg      → also packages build/Folio.dmg to send to someone
 #   ./build.sh --test     → runs the UI tests; results are kept (build/LastTestRun.xcresult) only if one fails
 #
 # Build caches live in Xcode's usual DerivedData folder (shared with building inside Xcode),
@@ -46,6 +47,16 @@ mkdir -p build
 rm -rf build/Folio.app
 cp -R "$products/Folio.app" build/Folio.app
 echo "Built build/Folio.app ($(du -sh build/Folio.app | cut -f1))"
+
+if [[ "${1:-}" == "--dmg" ]]; then
+  stage=$(mktemp -d)
+  cp -R build/Folio.app "$stage/"
+  ln -s /Applications "$stage/Applications"
+  rm -f build/Folio.dmg
+  hdiutil create -volname Folio -srcfolder "$stage" -format UDZO -quiet build/Folio.dmg
+  rm -rf "$stage"
+  echo "Packaged build/Folio.dmg ($(du -h build/Folio.dmg | cut -f1))"
+fi
 
 if [[ "${1:-}" == "--install" ]]; then
   if pgrep -xq Folio; then
