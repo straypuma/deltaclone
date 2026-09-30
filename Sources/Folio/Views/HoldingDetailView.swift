@@ -57,6 +57,7 @@ struct HoldingDetailView: View {
                 }
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
+                if !info.isCash { profit(info) }
             }
             Spacer()
             if let change = info.change24h {
@@ -69,6 +70,28 @@ struct HoldingDetailView: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
         .animation(.snappy, value: info.holding.balance)
+    }
+
+    @ViewBuilder
+    private func profit(_ info: HoldingInfo) -> some View {
+        if let performance = info.performance {
+            HStack(spacing: 6) {
+                Text("Invested \(Format.money(performance.invested, base))")
+                    .foregroundStyle(.secondary)
+                    .privacySensitive()
+                Text("·").foregroundStyle(.tertiary)
+                ChangeLabel(percent: performance.percent ?? 0, amount: performance.total, currency: base)
+                Text(performance.realized == 0 ? "profit" : "profit, \(Format.signedMoney(performance.realized, base)) realized")
+                    .foregroundStyle(.secondary)
+                    .privacySensitive()
+            }
+            .font(.callout)
+            .monospacedDigit()
+        } else {
+            Button("Add an average buy price to see your profit") { navigator.sheet = info.editSheet }
+                .buttonStyle(.link)
+                .font(.callout)
+        }
     }
 
     private func table(_ info: HoldingInfo) -> some View {
@@ -187,6 +210,7 @@ struct HoldingInfo {
     let unitPrice: Double?          // one unit, in the display currency
     let value: Double?
     let change24h: Double?
+    let performance: Performance?
     let editSheet: ActiveSheet
 
     init?(ref: HoldingRef, valuation: Valuation) {
@@ -203,6 +227,7 @@ struct HoldingInfo {
             unitPrice = row.price
             value = row.value
             change24h = row.change24h
+            performance = row.performance
             editSheet = .crypto(h)
         case .cash(let id):
             guard let row = valuation.cash.first(where: { $0.id == id }) else { return nil }
@@ -216,6 +241,7 @@ struct HoldingInfo {
             unitPrice = row.unitValue
             value = row.value
             change24h = nil
+            performance = nil
             editSheet = .cash(h)
         }
     }

@@ -28,6 +28,7 @@ struct CryptoRow: Identifiable {
     let value: Double?
     let sparkline: [Double]
     let imageURL: URL?
+    let performance: Performance?
 
     var id: UUID { holding.id }
     var name: String { holding.name }
@@ -35,6 +36,7 @@ struct CryptoRow: Identifiable {
     var sortPrice: Double { price ?? -1 }
     var sortChange: Double { change24h ?? -.infinity }
     var sortValue: Double { value ?? -1 }
+    var sortProfit: Double { performance?.total ?? -.infinity }
 }
 
 struct CashRow: Identifiable {
@@ -90,6 +92,10 @@ struct Valuation {
     let change24hPercent: Double?
     let history: [HistoryPoint]
     let assets: [AssetLine]
+    /// All-time profit across crypto holdings whose cost is known.
+    let cryptoProfit: (total: Double, percent: Double?)?
+    /// Crypto holdings left out of `cryptoProfit` because a price is missing.
+    let holdingsWithoutCost: Int
     private let totals: [AssetCategory: Double]
     private let changes: [AssetCategory: Double]
 
@@ -110,13 +116,26 @@ struct Valuation {
             return usd * usdToBase
         }
 
+        // Recorded prices are in whatever the display currency was at the time.
+        func convert(_ amount: Double, from currency: String?) -> Double? {
+            guard let currency, currency != base else { return amount }
+            guard let rate = m.usdRates[currency], rate > 0 else { return nil }
+            return toBase(amount / rate)
+        }
+
         crypto = p.crypto.map { h in
             let quote = m.coins[h.coinID]
             let price = toBase(quote?.price)
-            return CryptoRow(holding: h, price: price, change24h: quote?.change24h,
-                             value: price.map { $0 * h.balance },
-                             sparkline: quote?.sparkline ?? [], imageURL: quote?.imageURL ?? h.imageURL)
+            let value = price.map { $0 * h.balance }
+            return CryptoRow(holding: h, price: price, change24h: quote?.change24h, value: value,
+                             sparkline: quote?.sparkline ?? [], imageURL: quote?.imageURL ?? h.imageURL,
+                             performance: Performance(holding: h, currentValue: value, convert: convert))
         }
+        let known = crypto.compactMap(\.performance)
+        let invested = known.reduce(0) { $0 + $1.invested }
+        let profit = known.reduce(0) { $0 + $1.total }
+        cryptoProfit = known.isEmpty ? nil : (profit, invested > 0 ? profit / invested * 100 : nil)
+        holdingsWithoutCost = crypto.count - known.count
 
         cash = p.cash.map { h in
             let unit: Double?

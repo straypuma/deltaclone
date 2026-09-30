@@ -48,8 +48,8 @@ struct TransactionSheet: View {
                         .autocorrectionDisabled()
                         .accessibilityIdentifier("quantity")
 
-                    if kind.hasPrice {
-                        TextField("Price per \(info.unit) (\(priceCurrency))", text: $priceText, prompt: Text("Optional"))
+                    if showsPrice {
+                        TextField("\(kind == .receive ? "Cost" : "Price") per \(info.unit) (\(priceCurrency))", text: $priceText, prompt: Text("Optional"))
                             .autocorrectionDisabled()
                             .accessibilityIdentifier("price")
                     }
@@ -85,8 +85,8 @@ struct TransactionSheet: View {
             .padding([.horizontal, .bottom], 20)
             .padding(.top, 4)
         }
-        .frame(width: 460, height: kind.hasPrice ? 372 : 330)
-        .animation(.snappy, value: kind.hasPrice)
+        .frame(width: 460, height: showsPrice ? 372 : 330)
+        .animation(.snappy, value: showsPrice)
         .onAppear {
             // Default a new trade to today's price; the user can overwrite it.
             if existing == nil, priceText.isEmpty, !info.isCash, let price = info.unitPrice {
@@ -108,7 +108,7 @@ struct TransactionSheet: View {
                         .accessibilityIdentifier("balance-after")
                 }
             }
-            if kind.hasPrice, let quantity, let price, price > 0 {
+            if showsPrice, let quantity, let price, price > 0 {
                 Text("Total: \(Format.money(quantity * price, priceCurrency))")
                     .foregroundStyle(.secondary)
             }
@@ -117,6 +117,11 @@ struct TransactionSheet: View {
     }
 
     // MARK: Values
+
+    private var isCash: Bool { if case .cash = ref { true } else { false } }
+
+    /// Crypto buys, sells and receives record a price; it's what profit is calculated from.
+    private var showsPrice: Bool { !isCash && kind.hasPrice }
 
     /// Prices are recorded in the display currency at the time (kept as-is when editing).
     private var priceCurrency: String { existing?.priceCurrency ?? base }
@@ -128,7 +133,7 @@ struct TransactionSheet: View {
     /// nil when blank (price is optional) — `priceIsValid` catches unparseable input.
     private var price: Double? { Format.parseAmount(priceText) }
     private var priceIsValid: Bool {
-        !kind.hasPrice || priceText.trimmingCharacters(in: .whitespaces).isEmpty || (price ?? -1) >= 0
+        !showsPrice || priceText.trimmingCharacters(in: .whitespaces).isEmpty || (price ?? -1) >= 0
     }
 
     private func balanceBefore(_ info: HoldingInfo) -> Double {
@@ -146,7 +151,7 @@ struct TransactionSheet: View {
 
     private func save() {
         guard let quantity else { return }
-        let recordedPrice = kind.hasPrice ? price : nil
+        let recordedPrice = showsPrice ? price : nil
         let transaction = AssetTransaction(
             id: existing?.id ?? UUID(),
             kind: kind,

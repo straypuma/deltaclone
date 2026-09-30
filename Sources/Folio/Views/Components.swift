@@ -113,6 +113,8 @@ struct SummaryHeader: View {
     var change: Double? = nil
     var changePercent: Double? = nil
     var detail: String? = nil
+    /// All-time profit, shown under today's change when known.
+    var allTime: (amount: Double, percent: Double?)? = nil
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -130,6 +132,11 @@ struct SummaryHeader: View {
                 if let changePercent {
                     ChangeLabel(percent: changePercent, amount: change, currency: currency)
                     Text("Today").font(.caption).foregroundStyle(.secondary)
+                    if let allTime {
+                        ChangeLabel(percent: allTime.percent ?? 0, amount: allTime.amount, currency: currency)
+                            .padding(.top, 4)
+                        Text("All time").font(.caption).foregroundStyle(.secondary)
+                    }
                 } else if let detail {
                     Text(detail).foregroundStyle(.secondary)
                 }

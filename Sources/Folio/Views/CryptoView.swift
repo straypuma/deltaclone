@@ -19,7 +19,8 @@ struct CryptoView: View {
         } else {
             VStack(spacing: 0) {
                 SummaryHeader(title: "Crypto", value: valuation.total(.crypto), currency: valuation.base,
-                              change: valuation.change(.crypto), changePercent: valuation.changePercent(.crypto))
+                              change: valuation.change(.crypto), changePercent: valuation.changePercent(.crypto),
+                              allTime: valuation.cryptoProfit.map { ($0.total, $0.percent) })
                 Divider()
                 table
             }
@@ -75,6 +76,12 @@ struct CryptoView: View {
                     .tableCell(.trailing)
             }
             .alignment(.trailing)
+
+            TableColumn("Profit", value: \.sortProfit) { row in
+                ProfitCell(performance: row.performance, currency: valuation.base)
+                    .tableCell(.trailing)
+            }
+            .alignment(.trailing)
         }
         .tableStyle(.inset(alternatesRowBackgrounds: false))
         .accessibilityIdentifier("crypto-table")
@@ -121,6 +128,7 @@ struct CryptoSheet: View {
     @State private var searchState = SearchState.idle
     @State private var amountText: String
     @State private var label: String
+    @State private var averagePriceText: String
     @FocusState private var amountFocused: Bool
 
     struct Coin { var id, name, symbol: String; var image: URL? }
@@ -130,9 +138,23 @@ struct CryptoSheet: View {
         self.existing = existing
         _coin = State(initialValue: existing.map { Coin(id: $0.coinID, name: $0.name, symbol: $0.symbol, image: $0.imageURL) })
         _amountText = State(initialValue: existing.map { Format.editableAmount($0.startingAmount) } ?? "")
-        _label = State(initialValue: existing?.label ?? "")    }
+        _label = State(initialValue: existing?.label ?? "")
+        _averagePriceText = State(initialValue: existing?.startingPrice.map { Format.editableAmount($0) } ?? "")
+    }
 
     private var amount: Double? { Format.parseAmount(amountText) }
+
+    private var averagePrice: Double? {
+        Format.parseAmount(averagePriceText).flatMap { $0 >= 0 ? $0 : nil }
+    }
+
+    /// Blank is fine (profit just stays unknown); anything typed must be a valid price.
+    private var averagePriceIsValid: Bool {
+        averagePriceText.trimmingCharacters(in: .whitespaces).isEmpty || averagePrice != nil
+    }
+
+    /// Kept in the currency it was entered in, so changing the display currency doesn't alter it.
+    private var priceCurrency: String { existing?.startingPriceCurrency ?? base }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -154,11 +176,17 @@ struct CryptoSheet: View {
                             .focused($amountFocused)
                             .autocorrectionDisabled()
                             .accessibilityIdentifier("amount")
+                        TextField("Average buy price (\(priceCurrency))", text: $averagePriceText, prompt: Text("Optional"))
+                            .autocorrectionDisabled()
+                            .accessibilityIdentifier("average-price")
                         TextField("Label", text: $label, prompt: Text("Optional, e.g. Ledger or Coinbase"))
                             .autocorrectionDisabled()
                             .accessibilityIdentifier("label")
                     } footer: {
                         VStack(alignment: .leading, spacing: 4) {
+                            if averagePriceText.isEmpty {
+                                Text("Add what you paid on average to see your profit.")
+                            }
                             if let existing, hasTransactions, let balance = effectiveBalance {
                                 let count = existing.transactions.count
                                 Text("With \(count) transaction\(count == 1 ? "" : "s"), the balance is \(Format.amount(balance)) \(existing.symbol.uppercased()).")
@@ -202,13 +230,13 @@ struct CryptoSheet: View {
                     .keyboardShortcut(.cancelAction)
                 Button(existing == nil ? "Add" : "Save") { save() }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(coin == nil || amount == nil)
+                    .disabled(coin == nil || amount == nil || !averagePriceIsValid)
                     .accessibilityIdentifier("confirm")
             }
             .padding([.horizontal, .bottom], 20)
             .padding(.top, 4)
         }
-        .frame(width: 440, height: coin == nil ? 480 : 310)
+        .frame(width: 440, height: coin == nil ? 480 : 360)
         .animation(.snappy, value: coin == nil)
         .task(id: query) { await search() }
     }
@@ -269,8 +297,30 @@ struct CryptoSheet: View {
         var holding = existing ?? CryptoHolding(coinID: coin.id, symbol: coin.symbol, name: coin.name, startingAmount: amount)
         holding.imageURL = holding.imageURL ?? coin.image
         holding.startingAmount = amount
+        holding.startingPrice = averagePrice
+        holding.startingPriceCurrency = holding.startingPrice == nil ? nil : priceCurrency
         holding.label = label.trimmingCharacters(in: .whitespaces)
         store.save(holding)
         dismiss()
+    }
+}
+
+/// Profit in a table row: amount over percent, or a dash when the cost isn't known.
+struct ProfitCell: View {
+    let performance: Performance?
+    let currency: String
+
+    var body: some View {
+        if let performance {
+            VStack(alignment: .trailing, spacing: 1) {
+                Text(Format.signedMoney(performance.total, currency)).privacySensitive()
+                Text(Format.percent(performance.percent)).font(.caption)
+            }
+            .monospacedDigit()
+            .foregroundStyle(performance.total > 0 ? .green : performance.total < 0 ? .red : .secondary)
+        } else {
+            Text("—").foregroundStyle(.tertiary)
+                .help("Add an average buy price to this holding to see its profit")
+        }
     }
 }

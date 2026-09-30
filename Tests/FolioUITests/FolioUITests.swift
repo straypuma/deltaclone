@@ -206,6 +206,24 @@ final class FolioUITests: XCTestCase {
         assertSectionTotal("$500.00")
     }
 
+    func testProfitUsesAverageCost() {
+        // 2 ETH bought at $3,000, now $4,000: invested $6,000, worth $8,000.
+        addCrypto("eth", id: "ethereum", amount: "2", averagePrice: "3000")
+        show(section: "2")
+        openFirstHolding(in: "crypto-table")
+        XCTAssertTrue(app.staticTexts["+$2,000.00"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["(+33.33%)"].exists)
+
+        // Sell 1 at $5,000: $2,000 realized + $1,000 unrealized on the one left.
+        app.buttons["Add Transaction"].click()
+        app.radioButtons["Sell"].click()
+        type("1", into: "quantity")
+        replace(with: "5000", in: "price")
+        confirm()
+        XCTAssertTrue(app.staticTexts["+$3,000.00"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["(+50.00%)"].exists)
+    }
+
     // MARK: - Helpers
 
     private func launchApp(iCloudRoot: String? = nil) -> XCUIApplication {
@@ -223,13 +241,14 @@ final class FolioUITests: XCTestCase {
         app.typeKey(key, modifierFlags: .command)
     }
 
-    private func addCrypto(_ query: String, id: String, amount: String) {
+    private func addCrypto(_ query: String, id: String, amount: String, averagePrice: String? = nil) {
         app.typeKey("n", modifierFlags: .command)
         type(query, into: "coin-search")
         let result = app.buttons["coin-result-\(id)"]
         XCTAssertTrue(result.waitForExistence(timeout: 5))
         result.click()
         type(amount, into: "amount")
+        if let averagePrice { type(averagePrice, into: "average-price") }
         confirm()
     }
 

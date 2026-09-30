@@ -34,6 +34,8 @@ struct CryptoHolding: LedgerHolding, Codable, Hashable {
     var startingAmount: Double
     var label: String = ""      // where it's held, e.g. "Ledger"
     var transactions: [AssetTransaction] = []
+    var startingPrice: Double?          // average buy price of the starting balance, for profit
+    var startingPriceCurrency: String?
 }
 
 struct CashHolding: LedgerHolding, Codable, Hashable {
@@ -59,6 +61,8 @@ extension CryptoHolding {
             ?? decoder.container(keyedBy: LegacyKeys.self).decode(Double.self, forKey: .amount)
         label = try c.decodeIfPresent(String.self, forKey: .label) ?? ""
         transactions = try c.decodeIfPresent([AssetTransaction].self, forKey: .transactions) ?? []
+        startingPrice = try c.decodeIfPresent(Double.self, forKey: .startingPrice)
+        startingPriceCurrency = try c.decodeIfPresent(String.self, forKey: .startingPriceCurrency)
     }
 }
 
@@ -80,7 +84,8 @@ struct AssetTransaction: Identifiable, Codable, Hashable {
         var id: String { rawValue }
 
         var isInflow: Bool { self == .buy || self == .receive }
-        var hasPrice: Bool { self == .buy || self == .sell }
+        /// Buys and sells record their price; receives can carry a cost (e.g. coins moved in).
+        var hasPrice: Bool { self != .send }
 
         func title(cash: Bool) -> String {
             switch self {
@@ -98,7 +103,7 @@ struct AssetTransaction: Identifiable, Codable, Hashable {
     var kind: Kind
     var date: Date
     var quantity: Double        // always positive; `kind` gives the direction
-    var price: Double?          // per unit, for buys and sells
+    var price: Double?          // per unit: buy/sell price, or cost of a receive
     var priceCurrency: String?
     var note: String = ""
 

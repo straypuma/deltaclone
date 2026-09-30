@@ -81,6 +81,17 @@ struct OverviewView: View {
                     Text("Today").foregroundStyle(.secondary)
                 }
             }
+            if let profit = valuation.cryptoProfit {
+                HStack(spacing: 6) {
+                    ChangeLabel(percent: profit.percent ?? 0, amount: profit.total, currency: valuation.base)
+                    Text("All-time crypto profit").foregroundStyle(.secondary)
+                    if valuation.holdingsWithoutCost > 0 {
+                        Text("· \(valuation.holdingsWithoutCost) without a buy price")
+                            .foregroundStyle(.tertiary)
+                            .help("Add an average buy price to those holdings to include them")
+                    }
+                }
+            }
         }
         .animation(.snappy, value: valuation.total)
     }
