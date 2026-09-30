@@ -85,6 +85,11 @@ struct OverviewView: View {
                 HStack(spacing: 6) {
                     ChangeLabel(percent: profit.percent ?? 0, amount: profit.total, currency: valuation.base)
                     Text("All-time crypto profit").foregroundStyle(.secondary)
+                    if profit.includesEstimates {
+                        Text("· includes estimates")
+                            .foregroundStyle(.tertiary)
+                            .help("Some starting balances are valued at the average of their logged buys")
+                    }
                     if valuation.holdingsWithoutCost > 0 {
                         Text("· \(valuation.holdingsWithoutCost) without a buy price")
                             .foregroundStyle(.tertiary)

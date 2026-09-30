@@ -92,8 +92,8 @@ struct Valuation {
     let change24hPercent: Double?
     let history: [HistoryPoint]
     let assets: [AssetLine]
-    /// All-time profit across crypto holdings whose cost is known.
-    let cryptoProfit: (total: Double, percent: Double?)?
+    /// All-time profit across crypto holdings whose cost is known (or estimated).
+    let cryptoProfit: (total: Double, percent: Double?, includesEstimates: Bool)?
     /// Crypto holdings left out of `cryptoProfit` because a price is missing.
     let holdingsWithoutCost: Int
     private let totals: [AssetCategory: Double]
@@ -134,7 +134,8 @@ struct Valuation {
         let known = crypto.compactMap(\.performance)
         let invested = known.reduce(0) { $0 + $1.invested }
         let profit = known.reduce(0) { $0 + $1.total }
-        cryptoProfit = known.isEmpty ? nil : (profit, invested > 0 ? profit / invested * 100 : nil)
+        cryptoProfit = known.isEmpty ? nil
+            : (profit, invested > 0 ? profit / invested * 100 : nil, known.contains(where: \.isEstimated))
         holdingsWithoutCost = crypto.count - known.count
 
         cash = p.cash.map { h in

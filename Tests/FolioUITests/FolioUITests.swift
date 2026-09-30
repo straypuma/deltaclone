@@ -224,6 +224,23 @@ final class FolioUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["(+50.00%)"].exists)
     }
 
+    func testStartingBalanceWithoutPriceIsEstimatedFromBuys() {
+        // 2 ETH with no buy price, then a logged buy of 2 at $3,000. The starting balance is valued
+        // at that average: invested $12,000, worth 4 × $4,000 = $16,000.
+        addCrypto("eth", id: "ethereum", amount: "2")
+        show(section: "2")
+        openFirstHolding(in: "crypto-table")
+        XCTAssertTrue(app.buttons["Add an average buy price to see your profit"].exists)
+
+        app.buttons["Add Transaction"].click()
+        type("2", into: "quantity")
+        replace(with: "3000", in: "price")
+        confirm()
+        XCTAssertTrue(app.staticTexts["+$4,000.00"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Average buy price $3,000.00"].exists)
+        XCTAssertTrue(app.buttons["Set exact price"].exists)
+    }
+
     // MARK: - Helpers
 
     private func launchApp(iCloudRoot: String? = nil) -> XCUIApplication {

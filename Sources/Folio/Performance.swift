@@ -10,21 +10,32 @@ struct Performance {
     let realized: Double
     /// Today's value of what's held minus what it cost.
     let unrealized: Double
+    /// Average cost per coin still held.
+    let averageCost: Double?
+    /// The starting balance has no price of its own, so it's valued at the average of the logged buys.
+    let isEstimated: Bool
 
     var total: Double { realized + unrealized }
     var percent: Double? { invested > 0 ? total / invested * 100 : nil }
 
-    /// nil when it can't be known: the starting balance has no average price, a buy or sell has
-    /// no price, or there's no current price. `convert` turns an amount in a currency into the
-    /// display currency (nil currency means it's already in it).
+    /// nil when it can't be known: the starting balance has no price and there are no priced buys
+    /// to estimate it from, a buy or sell has no price, or there's no current price. `convert` turns
+    /// an amount in a currency into the display currency (nil currency means it's already in it).
     init?(holding: CryptoHolding, currentValue: Double?, convert: (Double, String?) -> Double?) {
         guard let currentValue else { return nil }
         var quantity = holding.startingAmount
         var cost = 0.0
+        var isEstimated = false
         if holding.startingAmount > 0 {
-            guard let price = holding.startingPrice,
-                  let value = convert(price * holding.startingAmount, holding.startingPriceCurrency) else { return nil }
-            cost = value
+            if let price = holding.startingPrice,
+               let value = convert(price * holding.startingAmount, holding.startingPriceCurrency) {
+                cost = value
+            } else if let average = Self.averageBuyPrice(holding, convert: convert) {
+                cost = average * holding.startingAmount
+                isEstimated = true
+            } else {
+                return nil
+            }
         }
         var invested = cost
         var realized = 0.0
@@ -57,5 +68,19 @@ struct Performance {
         self.costBasis = max(cost, 0)
         self.realized = realized
         self.unrealized = currentValue - max(cost, 0)
+        self.averageCost = quantity > 0 ? max(cost, 0) / quantity : nil
+        self.isEstimated = isEstimated
+    }
+
+    /// Average price paid across the holding's priced buys, in the display currency.
+    private static func averageBuyPrice(_ holding: CryptoHolding, convert: (Double, String?) -> Double?) -> Double? {
+        var spent = 0.0
+        var bought = 0.0
+        for transaction in holding.transactions where transaction.kind == .buy {
+            guard let total = transaction.total, let value = convert(total, transaction.priceCurrency) else { continue }
+            spent += value
+            bought += transaction.quantity
+        }
+        return bought > 0 ? spent / bought : nil
     }
 }

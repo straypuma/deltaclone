@@ -314,13 +314,13 @@ struct ProfitCell: View {
         if let performance {
             VStack(alignment: .trailing, spacing: 1) {
                 Text(Format.signedMoney(performance.total, currency)).privacySensitive()
-                Text(Format.percent(performance.percent)).font(.caption)
+                Text((performance.isEstimated ? "≈ " : "") + Format.percent(performance.percent)).font(.caption)
             }
             .monospacedDigit()
             .foregroundStyle(performance.total > 0 ? .green : performance.total < 0 ? .red : .secondary)
         } else {
             Text("—").foregroundStyle(.tertiary)
-                .help("Add an average buy price to this holding to see its profit")
+                .help("Add an average buy price or log a buy to see this holding's profit")
         }
     }
 }

@@ -75,15 +75,28 @@ struct HoldingDetailView: View {
     @ViewBuilder
     private func profit(_ info: HoldingInfo) -> some View {
         if let performance = info.performance {
-            HStack(spacing: 6) {
-                Text("Invested \(Format.money(performance.invested, base))")
-                    .foregroundStyle(.secondary)
-                    .privacySensitive()
-                Text("·").foregroundStyle(.tertiary)
-                ChangeLabel(percent: performance.percent ?? 0, amount: performance.total, currency: base)
-                Text(performance.realized == 0 ? "profit" : "profit, \(Format.signedMoney(performance.realized, base)) realized")
-                    .foregroundStyle(.secondary)
-                    .privacySensitive()
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text("Invested \(Format.money(performance.invested, base))")
+                        .foregroundStyle(.secondary)
+                        .privacySensitive()
+                    Text("·").foregroundStyle(.tertiary)
+                    ChangeLabel(percent: performance.percent ?? 0, amount: performance.total, currency: base)
+                    Text(performance.realized == 0 ? "profit" : "profit, \(Format.signedMoney(performance.realized, base)) realized")
+                        .foregroundStyle(.secondary)
+                        .privacySensitive()
+                }
+                if let averageCost = performance.averageCost {
+                    HStack(spacing: 6) {
+                        Text("Average buy price \(Format.price(averageCost, base))")
+                            .foregroundStyle(.secondary)
+                        if performance.isEstimated {
+                            Text("· starting balance estimated from your buys").foregroundStyle(.tertiary)
+                            Button("Set exact price") { navigator.sheet = info.editSheet }
+                                .buttonStyle(.link)
+                        }
+                    }
+                }
             }
             .font(.callout)
             .monospacedDigit()
