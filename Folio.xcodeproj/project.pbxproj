@@ -1,0 +1,494 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6382D7D514DFB3B766EA5AC6 /* FolioWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 34A12B4316E0C7804F2E247E /* FolioWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9DF7F31E87D4EBE6AB101AEA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DD7512F5E0289CDDCE66B0F8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 090470DEBBEDF60952B5EEB7;
+			remoteInfo = FolioWidgetExtension;
+		};
+		183CB65A93EDAC695F3FD529 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DD7512F5E0289CDDCE66B0F8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A8B151EF80197D866D8AAC4C;
+			remoteInfo = Folio;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		88165CEE71ECEF07D8E155CC /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6382D7D514DFB3B766EA5AC6 /* FolioWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		56276DD632C62329F6ADA69E /* Folio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Folio.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		34A12B4316E0C7804F2E247E /* FolioWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FolioWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A799895070A8829DED640EA2 /* FolioUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FolioUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C4FCA76797A440CBA6DA0491 /* FolioWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "FolioWidget-Info.plist"; sourceTree = "<group>"; };
+		B8C30B4501AB61E248FA31B8 /* FolioWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FolioWidget.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		4133148486FD3F88917196CC /* Folio */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Folio; sourceTree = "<group>"; };
+		5946ABB114403A2E5563F52C /* Shared */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Shared; sourceTree = "<group>"; };
+		62073C66595723C3FB02BE22 /* FolioWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; path = FolioWidget; sourceTree = "<group>"; };
+		B14D8F40023F55B05F19B7E0 /* FolioUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = FolioUITests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D559DD42EEC179AF0A55B8E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3114DAF7E949EBFCF6C2C9B0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AC26594F3327346BB87EA3B9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		186495F7DA296BF880DF3A22 = {
+			isa = PBXGroup;
+			children = (
+				678DFDA984997D39267CB7FC /* Sources */,
+				C769EF7BDDC01ED21A9F7C5F /* Tests */,
+				256FC6E4DBF98308CECA2B9B /* Support */,
+				D71BD8A0B6A6AA54EDBA6454 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		678DFDA984997D39267CB7FC /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				4133148486FD3F88917196CC /* Folio */,
+				62073C66595723C3FB02BE22 /* FolioWidget */,
+				5946ABB114403A2E5563F52C /* Shared */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		C769EF7BDDC01ED21A9F7C5F /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				B14D8F40023F55B05F19B7E0 /* FolioUITests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		256FC6E4DBF98308CECA2B9B /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				C4FCA76797A440CBA6DA0491 /* FolioWidget-Info.plist */,
+				B8C30B4501AB61E248FA31B8 /* FolioWidget.entitlements */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		D71BD8A0B6A6AA54EDBA6454 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				56276DD632C62329F6ADA69E /* Folio.app */,
+				34A12B4316E0C7804F2E247E /* FolioWidgetExtension.appex */,
+				A799895070A8829DED640EA2 /* FolioUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A8B151EF80197D866D8AAC4C /* Folio */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3310DDD30EFB4A8C6AB9C189;
+			buildPhases = (
+				C5459B89CEFDD994ADAF9BE2,
+				8D559DD42EEC179AF0A55B8E,
+				F631AA1EB59CA78A63BB2E35,
+				88165CEE71ECEF07D8E155CC,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AFDD3FE695955AF220A81392,
+			);
+			fileSystemSynchronizedGroups = (
+				4133148486FD3F88917196CC,
+				5946ABB114403A2E5563F52C,
+			);
+			name = Folio;
+			packageProductDependencies = (
+			);
+			productName = Folio;
+			productReference = 56276DD632C62329F6ADA69E;
+			productType = "com.apple.product-type.application";
+		};
+		090470DEBBEDF60952B5EEB7 /* FolioWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D78C84877DD2260C19980B01;
+			buildPhases = (
+				97828F347FB84C47ED905A8A,
+				3114DAF7E949EBFCF6C2C9B0,
+				172BF7E0FAAEBB843ADE12C3,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				62073C66595723C3FB02BE22,
+				5946ABB114403A2E5563F52C,
+			);
+			name = FolioWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = FolioWidgetExtension;
+			productReference = 34A12B4316E0C7804F2E247E;
+			productType = "com.apple.product-type.app-extension";
+		};
+		9A7935022713FA6350A8DC05 /* FolioUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D3CD3D931D0E57AD2C90DEFB;
+			buildPhases = (
+				B9C55F508CDC718BBEB74E98,
+				AC26594F3327346BB87EA3B9,
+				713F54C46E2676FFD62D2245,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D79A46930876F4C0756D4C98,
+			);
+			fileSystemSynchronizedGroups = (
+				B14D8F40023F55B05F19B7E0,
+			);
+			name = FolioUITests;
+			packageProductDependencies = (
+			);
+			productName = FolioUITests;
+			productReference = A799895070A8829DED640EA2;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DD7512F5E0289CDDCE66B0F8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					A8B151EF80197D866D8AAC4C = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					090470DEBBEDF60952B5EEB7 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					9A7935022713FA6350A8DC05 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = A8B151EF80197D866D8AAC4C;
+					};
+				};
+			};
+			buildConfigurationList = B9EACD5B950CEA3A53B1A8E9 /* Build configuration list for PBXProject "Folio" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 186495F7DA296BF880DF3A22;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D71BD8A0B6A6AA54EDBA6454 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A8B151EF80197D866D8AAC4C /* Folio */,
+				090470DEBBEDF60952B5EEB7 /* FolioWidgetExtension */,
+				9A7935022713FA6350A8DC05 /* FolioUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F631AA1EB59CA78A63BB2E35 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		172BF7E0FAAEBB843ADE12C3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		713F54C46E2676FFD62D2245 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C5459B89CEFDD994ADAF9BE2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		97828F347FB84C47ED905A8A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B9C55F508CDC718BBEB74E98 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AFDD3FE695955AF220A81392 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 090470DEBBEDF60952B5EEB7 /* FolioWidgetExtension */;
+			targetProxy = 9DF7F31E87D4EBE6AB101AEA /* PBXContainerItemProxy */;
+		};
+		D79A46930876F4C0756D4C98 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A8B151EF80197D866D8AAC4C /* Folio */;
+			targetProxy = 183CB65A93EDAC695F3FD529 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		8AF91A6E93156438EEB477D6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				ARCHS = arm64;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		81A07A9BE1098DDFA97BB67B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				ARCHS = arm64;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEPLOYMENT_POSTPROCESSING = YES;
+				STRIP_INSTALLED_PRODUCT = YES;
+				STRIP_STYLE = "non-global";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-Osize";
+			};
+			name = Release;
+		};
+		1D18FE01BBDB76038C0CD934 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Folio;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.folio.Folio;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		0AC81936F13014A3232FF5E6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Folio;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.folio.Folio;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		AEB3ABC34B2240762FD2B9F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Support/FolioWidget.entitlements;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Support/FolioWidget-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Folio;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.folio.Folio.Widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		2EC6FA32EC4136E956B71D2A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Support/FolioWidget.entitlements;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Support/FolioWidget-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Folio;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.folio.Folio.Widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		BD9A066D43CBC0EDABB737AA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.folio.FolioUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Folio;
+			};
+			name = Debug;
+		};
+		323B3A6AAA6F3F8144DFD5C8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.folio.FolioUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Folio;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B9EACD5B950CEA3A53B1A8E9 /* Build configuration list for PBXProject "Folio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8AF91A6E93156438EEB477D6 /* Debug */,
+				81A07A9BE1098DDFA97BB67B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3310DDD30EFB4A8C6AB9C189 /* Build configuration list for PBXNativeTarget "Folio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1D18FE01BBDB76038C0CD934 /* Debug */,
+				0AC81936F13014A3232FF5E6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D78C84877DD2260C19980B01 /* Build configuration list for PBXNativeTarget "FolioWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AEB3ABC34B2240762FD2B9F3 /* Debug */,
+				2EC6FA32EC4136E956B71D2A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D3CD3D931D0E57AD2C90DEFB /* Build configuration list for PBXNativeTarget "FolioUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BD9A066D43CBC0EDABB737AA /* Debug */,
+				323B3A6AAA6F3F8144DFD5C8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DD7512F5E0289CDDCE66B0F8 /* Project object */;
+}
