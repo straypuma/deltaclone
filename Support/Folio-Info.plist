@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Sparkle: updates come from the appcast attached to the latest GitHub release. -->
+	<key>SUFeedURL</key>
+	<string>https://github.com/straypuma/deltaclone/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>6fHtFn1PE7TVsYSz258KWORV+yOTcClUlj3GwabDDm0=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+</dict>
+</plist>

@@ -1,14 +1,21 @@
 #!/bin/zsh
 # Builds Folio.app (Apple Silicon, release) with Xcode.
-#   ./build.sh            → build/Folio.app
-#   ./build.sh --install  → also copies it to /Applications
-#   ./build.sh --dmg      → also packages build/Folio.dmg to send to someone
-#   ./build.sh --test     → runs the UI tests; results are kept (build/LastTestRun.xcresult) only if one fails
+#   ./build.sh                  → build/Folio.app
+#   ./build.sh --install        → also copies it to /Applications
+#   ./build.sh --dmg            → also packages build/Folio.dmg to send to someone
+#   ./build.sh --release 1.2    → publishes version 1.2 as a GitHub release; installed copies
+#                                 pick it up through Sparkle (Folio ▸ Check for Updates…)
+#   ./build.sh --test           → runs the UI tests; results are kept (build/LastTestRun.xcresult)
+#                                 only if one fails
 #
 # Build caches live in Xcode's usual DerivedData folder (shared with building inside Xcode),
-# so this folder stays small. Signing uses the Apple ID added in Xcode ▸ Settings ▸ Accounts.
+# so this folder stays small. Signing uses the Apple ID added in Xcode ▸ Settings ▸ Accounts;
+# updates are signed with the Sparkle key in your login keychain.
 set -euo pipefail
 cd "${0:A:h}"
+
+mode=${1:-}
+REPO=straypuma/deltaclone
 
 XCODEBUILD=(xcodebuild -project Folio.xcodeproj -scheme Folio -destination "platform=macOS,arch=arm64"
             -allowProvisioningUpdates COMPILER_INDEX_STORE_ENABLE=NO -quiet)
@@ -20,7 +27,7 @@ derived=${products:h:h:h}  # …/DerivedData/Folio-<hash>
 # Xcode never prunes its logs; drop anything older than two weeks.
 [[ -d "$derived/Logs" ]] && find "$derived/Logs" -type f -mtime +14 -delete 2>/dev/null
 
-if [[ "${1:-}" == "--test" ]]; then
+if [[ $mode == --test ]]; then
   mkdir -p build
   rm -rf build/LastTestRun.xcresult
   result=0
@@ -41,24 +48,53 @@ if [[ "${1:-}" == "--test" ]]; then
   exit $result
 fi
 
-"${XCODEBUILD[@]}" build -configuration Release
+# Version: the release being published, else the latest release tag. The build number is the
+# commit count, so every build is newer than the last and Sparkle can compare them.
+if [[ $mode == --release ]]; then
+  version=${2:?"usage: ./build.sh --release <version>, e.g. 1.2"}
+  [[ -z "$(git status --porcelain)" ]] || { echo "Commit your changes before releasing."; exit 1; }
+  git rev-parse -q --verify "refs/tags/v$version" >/dev/null && { echo "v$version already exists."; exit 1; }
+else
+  version=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
+  version=${version:-1.0}
+fi
+build_number=$(git rev-list --count HEAD)
+
+"${XCODEBUILD[@]}" build -configuration Release MARKETING_VERSION=$version CURRENT_PROJECT_VERSION=$build_number
 
 mkdir -p build
 rm -rf build/Folio.app
 cp -R "$products/Folio.app" build/Folio.app
-echo "Built build/Folio.app ($(du -sh build/Folio.app | cut -f1))"
+echo "Built build/Folio.app $version ($build_number), $(du -sh build/Folio.app | cut -f1)"
 
-if [[ "${1:-}" == "--dmg" ]]; then
-  stage=$(mktemp -d)
+make_dmg() {
+  local stage=$(mktemp -d)
   cp -R build/Folio.app "$stage/"
   ln -s /Applications "$stage/Applications"
-  rm -f build/Folio.dmg
-  hdiutil create -volname Folio -srcfolder "$stage" -format UDZO -quiet build/Folio.dmg
+  rm -f "$1"
+  hdiutil create -volname Folio -srcfolder "$stage" -format UDZO -quiet "$1"
   rm -rf "$stage"
+}
+
+if [[ $mode == --dmg ]]; then
+  make_dmg build/Folio.dmg
   echo "Packaged build/Folio.dmg ($(du -h build/Folio.dmg | cut -f1))"
 fi
 
-if [[ "${1:-}" == "--install" ]]; then
+if [[ $mode == --release ]]; then
+  sparkle="$derived/SourcePackages/artifacts/sparkle/Sparkle/bin"
+  rm -rf build/release && mkdir -p build/release
+  make_dmg "build/release/Folio-$version.dmg"
+  # Signs the DMG with the Sparkle key from the keychain and writes appcast.xml next to it.
+  "$sparkle/generate_appcast" --download-url-prefix "https://github.com/$REPO/releases/download/v$version/" build/release
+  git tag "v$version"
+  git push -q origin "v$version"
+  gh release create "v$version" "build/release/Folio-$version.dmg" build/release/appcast.xml \
+    --repo "$REPO" --title "Folio $version" --generate-notes
+  echo "Released Folio $version: https://github.com/$REPO/releases/tag/v$version"
+fi
+
+if [[ $mode == --install ]]; then
   if pgrep -xq Folio; then
     osascript -e 'tell application "Folio" to quit'
     sleep 1

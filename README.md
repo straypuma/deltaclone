@@ -9,6 +9,7 @@ SwiftUI + Swift Charts + WidgetKit, Apple Silicon, ~3 MB.
 ./build.sh            # → build/Folio.app
 ./build.sh --install  # also copies it to /Applications
 ./build.sh --test     # runs the UI tests (results are kept only when something fails)
+./build.sh --release 1.2  # publishes a GitHub release that installed copies update to
 ```
 
 Builds are signed with the Apple ID added in Xcode ▸ Settings ▸ Accounts, so macOS keeps
@@ -29,13 +30,24 @@ dropped into `Sources/…` or `Tests/…` are picked up automatically.
 
 ## Sharing with a friend
 
-`./build.sh --dmg` makes `build/Folio.dmg` (~3 MB). Send it however you like (AirDrop, Messages,
-a cloud link). It needs an Apple Silicon Mac on macOS 15 or later.
+Point them to the [latest release](https://github.com/straypuma/deltaclone/releases/latest) and have
+them download `Folio-x.y.dmg` (or send them one made with `./build.sh --dmg`). It needs an Apple
+Silicon Mac on macOS 15 or later.
 
 Builds are signed with a free Apple account, so the first time they open it macOS shows
 “Folio Not Opened”. They click **Done**, then go to **System Settings ▸ Privacy & Security**, scroll
 down to “Folio was blocked…”, click **Open Anyway** and confirm. After that it opens normally.
-Their portfolio is their own, stored in their iCloud Drive. Updates mean sending a new DMG.
+Their portfolio is their own, stored in their iCloud Drive.
+
+## Updates
+
+Folio uses [Sparkle](https://sparkle-project.org): about once a day it checks the `appcast.xml` on the
+latest GitHub release and offers to install anything newer (also Folio ▸ Check for Updates…).
+`./build.sh --release <version>` does the whole release: builds with the version and a build number
+from the commit count, packages the DMG, signs it with the Sparkle key in your login keychain,
+writes the appcast, tags and publishes the release. Updates installed by Sparkle don't show the
+“Open Anyway” prompt again. Keep a backup of the signing key (`generate_keys -x <file>` from
+Sparkle's tools); without it, installed copies can't be updated.
 
 (A paid Apple Developer Program membership would allow a notarized build that opens without that step.)
 

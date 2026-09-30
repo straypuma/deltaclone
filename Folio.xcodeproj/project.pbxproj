@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4FF493B392E763FAE67E1DF2 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 9F252C3A43CCFFBEDABD3952 /* Sparkle */; };
 		6382D7D514DFB3B766EA5AC6 /* FolioWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 34A12B4316E0C7804F2E247E /* FolioWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -61,6 +62,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4FF493B392E763FAE67E1DF2 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -151,6 +153,7 @@
 			);
 			name = Folio;
 			packageProductDependencies = (
+				9F252C3A43CCFFBEDABD3952,
 			);
 			productName = Folio;
 			productReference = 56276DD632C62329F6ADA69E;
@@ -233,6 +236,9 @@
 			);
 			mainGroup = 186495F7DA296BF880DF3A22;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F66BFE9A13DDD300CE0F9DFD /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D71BD8A0B6A6AA54EDBA6454 /* Products */;
 			projectDirPath = "";
@@ -362,6 +368,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Folio;
+				INFOPLIST_FILE = "Support/Folio-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -379,6 +386,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Folio;
+				INFOPLIST_FILE = "Support/Folio-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -487,6 +495,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F66BFE9A13DDD300CE0F9DFD /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9F252C3A43CCFFBEDABD3952 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F66BFE9A13DDD300CE0F9DFD /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DD7512F5E0289CDDCE66B0F8 /* Project object */;
 }

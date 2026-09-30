@@ -5,6 +5,7 @@ struct FolioApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var store = PortfolioStore()
     @State private var navigator = Navigator()
+    @State private var updater = AppUpdater()
     @AppStorage(Pref.showMenuBarExtra, store: Pref.defaults) private var showMenuBarExtra = false
 
     var body: some Scene {
@@ -15,11 +16,12 @@ struct FolioApp: App {
                 .frame(minWidth: 760, minHeight: 500)
         }
         .defaultSize(width: 1080, height: 720)
-        .commands { FolioCommands(store: store, navigator: navigator) }
+        .commands { FolioCommands(store: store, navigator: navigator, updater: updater) }
 
         Settings {
             SettingsView()
                 .environment(store)
+                .environment(updater)
         }
 
         MenuBarExtra(isInserted: $showMenuBarExtra) {
@@ -109,12 +111,20 @@ extension FocusedValues {
 struct FolioCommands: Commands {
     let store: PortfolioStore
     let navigator: Navigator
+    let updater: AppUpdater
     @AppStorage(Pref.hideBalances, store: Pref.defaults) private var hideBalances = false
     @Environment(\.openWindow) private var openWindow
     @FocusedValue(\.deleteSelection) private var deleteSelection
     @FocusedValue(\.transactionTarget) private var transactionTarget
 
     var body: some Commands {
+        CommandGroup(after: .appInfo) {
+            if updater.isAvailable {
+                Button("Check for Updates…") { updater.checkForUpdates() }
+                    .disabled(!updater.canCheckForUpdates)
+            }
+        }
+
         CommandGroup(replacing: .newItem) {
             Button("Add Crypto…") { present(.crypto(nil)) }
                 .keyboardShortcut("n")

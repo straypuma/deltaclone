@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(PortfolioStore.self) private var store
+    @Environment(AppUpdater.self) private var updater
     @AppStorage(Pref.baseCurrency, store: Pref.defaults) private var base = Pref.defaultCurrency
     @AppStorage(Pref.refreshMinutes, store: Pref.defaults) private var refreshMinutes = 5
     @AppStorage(Pref.showMenuBarExtra, store: Pref.defaults) private var showMenuBarExtra = false
@@ -19,6 +20,7 @@ struct SettingsView: View {
     }
 
     var body: some View {
+        @Bindable var updater = updater
         Form {
             Section {
                 CurrencyPicker(title: "Display currency", selection: $base, rates: store.market.usdRates)
@@ -58,6 +60,21 @@ struct SettingsView: View {
                 }
             } footer: {
                 Text(storageNote).foregroundStyle(.secondary)
+            }
+
+            Section {
+                if updater.isAvailable {
+                    Toggle("Check for updates automatically", isOn: $updater.checksAutomatically)
+                }
+                LabeledContent("Version") {
+                    HStack {
+                        Text(updater.version).foregroundStyle(.secondary).monospacedDigit()
+                        if updater.isAvailable {
+                            Button("Check Now") { updater.checkForUpdates() }
+                                .disabled(!updater.canCheckForUpdates)
+                        }
+                    }
+                }
             }
         }
         .formStyle(.grouped)
