@@ -8,8 +8,13 @@ SwiftUI + Swift Charts + WidgetKit, Apple Silicon, ~3 MB.
 ```sh
 ./build.sh            # → build/Folio.app
 ./build.sh --install  # also copies it to /Applications
-./build.sh --test     # runs the UI tests
+./build.sh --test     # runs the UI tests (results are kept only when something fails)
 ```
+
+Builds are signed with the Apple ID added in Xcode ▸ Settings ▸ Accounts, so macOS keeps
+permissions (like iCloud Drive access) across updates. Build caches live in Xcode's usual
+`~/Library/Developer/Xcode/DerivedData`, shared with building inside Xcode; `build/` only ever
+holds the finished app.
 
 Or open `Folio.xcodeproj` in Xcode. The project uses folder-synced groups, so new files
 dropped into `Sources/…` or `Tests/…` are picked up automatically.
