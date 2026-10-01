@@ -18,6 +18,8 @@ final class PortfolioStore {
     /// Progress while daily price history (for the longer chart ranges) downloads.
     private(set) var historyProgress: (done: Int, total: Int)?
     private(set) var historyError: String?
+    /// The free API said "too many requests"; loading pauses and then carries on.
+    private(set) var historyRateLimited = false
 
     @ObservationIgnored private var lastAttempt: Date?
     @ObservationIgnored private var refreshQueued = false
@@ -209,20 +211,31 @@ final class PortfolioStore {
         guard !stale.isEmpty else { return }
         historyError = nil
         historyProgress = (0, stale.count)
-        let api = MarketAPI(apiKey: Pref.defaults.string(forKey: Pref.apiKey))
-        for (index, id) in stale.enumerated() {
-            if index > 0 { try? await Task.sleep(for: spacing) }
-            do {
-                let fresh = try await api.dailyHistory(id: id)
-                let firstNew = fresh.first?.date ?? .distantFuture
-                market.daily[id] = (market.daily[id] ?? []).filter { $0.date < firstNew } + fresh
-                market.dailyUpdated[id] = .now
-                historyProgress = (index + 1, stale.count)
-            } catch {
-                historyError = "Couldn't load price history: \(error.localizedDescription)"
-                break
+        let key = Pref.defaults.string(forKey: Pref.apiKey) ?? ""
+        let api = MarketAPI(apiKey: key)
+        // Without a key the free API allows only a few calls a minute, so go slower.
+        let gap = key.isEmpty ? max(spacing, .seconds(5)) : spacing
+        coins: for (index, id) in stale.enumerated() {
+            if index > 0 { try? await Task.sleep(for: gap) }
+            for attempt in 1...3 {
+                do {
+                    let fresh = try await api.dailyHistory(id: id)
+                    let firstNew = fresh.first?.date ?? .distantFuture
+                    market.daily[id] = (market.daily[id] ?? []).filter { $0.date < firstNew } + fresh
+                    market.dailyUpdated[id] = .now
+                    historyProgress = (index + 1, stale.count)
+                    historyRateLimited = false
+                    break
+                } catch MarketError.rateLimited where attempt < 3 {
+                    historyRateLimited = true
+                    try? await Task.sleep(for: .seconds(60))
+                } catch {
+                    historyError = "Couldn't load price history: \(error.localizedDescription)"
+                    break coins
+                }
             }
         }
+        historyRateLimited = false
         historyProgress = nil
         write(market, to: Self.marketURL)
     }

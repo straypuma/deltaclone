@@ -145,7 +145,9 @@ struct OverviewView: View {
                     if points.count > 1 {
                         chartBody(points: points, hovered: hovered)
                     } else if let progress = store.historyProgress {
-                        ProgressView("Loading price history… \(progress.done) of \(progress.total)")
+                        ProgressView(store.historyRateLimited
+                            ? "CoinGecko's free limit was hit; continuing in a minute… \(progress.done) of \(progress.total)"
+                            : "Loading price history… \(progress.done) of \(progress.total)")
                     } else if let error = store.historyError, range.usesDailyPrices {
                         VStack(spacing: 8) {
                             Text(error).foregroundStyle(.secondary)
@@ -216,6 +218,7 @@ struct OverviewView: View {
         switch range {
         case .day: .dateTime.hour()
         case .week: .dateTime.weekday(.abbreviated)
+        case .month: .dateTime.month(.abbreviated).day()
         case .yearToDate, .year: .dateTime.month(.abbreviated)
         }
     }

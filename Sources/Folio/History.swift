@@ -1,7 +1,7 @@
 import Foundation
 
 enum ChartRange: String, CaseIterable, Identifiable {
-    case day = "24H", week = "7D", yearToDate = "YTD", year = "1Y"
+    case day = "24H", week = "7D", month = "1M", yearToDate = "YTD", year = "1Y"
     var id: String { rawValue }
 
     /// 24H and 7D use the hourly 7-day prices; the rest use cached daily prices.
@@ -11,6 +11,7 @@ enum ChartRange: String, CaseIterable, Identifiable {
         switch self {
         case .day: "Today"
         case .week: "Past week"
+        case .month: "Past month"
         case .yearToDate: "Year to date"
         case .year: "Past year"
         }
@@ -21,6 +22,7 @@ enum ChartRange: String, CaseIterable, Identifiable {
         return switch self {
         case .day: now.addingTimeInterval(-86_400)
         case .week: now.addingTimeInterval(-7 * 86_400)
+        case .month: calendar.date(byAdding: .month, value: -1, to: now)
         case .yearToDate: calendar.date(from: calendar.dateComponents([.year], from: now))
         case .year: calendar.date(byAdding: .year, value: -1, to: now)
         }
