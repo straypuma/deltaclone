@@ -37,6 +37,16 @@ enum MarketFixtures {
         return quotes
     }
 
+    /// A year of daily prices rising steadily to today's fixture price.
+    static func daily(_ id: String) -> [PricePoint] {
+        guard let price = coins.first(where: { $0.id == id })?.price else { return [] }
+        let today = Calendar.current.startOfDay(for: .now)
+        return (0...365).map { day in
+            PricePoint(date: today.addingTimeInterval(-Double(365 - day) * 86_400),
+                       price: price * (0.5 + 0.5 * Double(day) / 365))
+        }
+    }
+
     static func nftFloor(_ collection: NFTCollection) -> NFTQuote {
         switch collection {
         case .miladyMaker: NFTQuote(floorETH: 1, floorUSD: 4_000, change24h: 1, imageURL: nil)

@@ -7,13 +7,9 @@ struct OverviewView: View {
     @AppStorage(Pref.hideBalances, store: Pref.defaults) private var hideBalances = false
     @AppStorage(Pref.secondaryCurrency, store: Pref.defaults) private var secondary = Pref.defaultSecondaryCurrency
     @AppStorage(Pref.showsSecondaryCurrency, store: Pref.defaults) private var showsSecondary = false
-    @State private var range: ChartRange = .week
+    @AppStorage(Pref.chartRange, store: Pref.defaults) private var range: ChartRange = .week
+    @Environment(PortfolioStore.self) private var store
     @State private var hoverDate: Date?
-
-    enum ChartRange: String, CaseIterable, Identifiable {
-        case day = "24H", week = "7D"
-        var id: String { rawValue }
-    }
 
     var body: some View {
         if valuation.isEmpty {
@@ -29,10 +25,16 @@ struct OverviewView: View {
                 }
             }
         } else {
+            // Worked out once per redraw; header and chart share it. Longer ranges wait until
+            // every coin's daily prices are in, rather than drawing a partial line.
+            let points = range.usesDailyPrices && !store.hasDailyHistory ? [] : valuation.history(range)
+            let hovered = hoverDate.flatMap { date in
+                points.min { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) }
+            }
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    header
-                    if points.count > 1 { chart }
+                    header(points: points, hovered: hovered)
+                    chart(points: points, hovered: hovered)
                     HStack(alignment: .top, spacing: 20) {
                         allocation
                         holdings
@@ -43,26 +45,13 @@ struct OverviewView: View {
                 .frame(maxWidth: 1100)
                 .frame(maxWidth: .infinity)
             }
+            .onChange(of: range, initial: true) {
+                if range.usesDailyPrices { store.requestDailyHistory() }
+            }
         }
     }
 
     // MARK: Header
-
-    private var hovered: HistoryPoint? {
-        guard let hoverDate else { return nil }
-        return points.min { abs($0.date.timeIntervalSince(hoverDate)) < abs($1.date.timeIntervalSince(hoverDate)) }
-    }
-
-    private var points: [HistoryPoint] {
-        range == .week ? valuation.history : Array(valuation.history.suffix(25))
-    }
-
-    private var rangeChange: (amount: Double, percent: Double?)? {
-        guard range == .week, let first = points.first, let last = points.last else { return nil }
-        return (last.value - first.value, first.value > 0 ? (last.value - first.value) / first.value * 100 : nil)
-    }
-
-    // MARK: Header currency
 
     /// Clicking the net worth switches the header to the second currency from Settings.
     private var headerCurrency: String {
@@ -73,19 +62,24 @@ struct OverviewView: View {
         valuation.converted(amount, to: headerCurrency) ?? amount
     }
 
-    private var btcWorth: Double? {
+    private func header(points: [HistoryPoint], hovered: HistoryPoint?) -> some View {
         let value = hovered?.value ?? valuation.total
-        guard let price = hovered?.btcPrice ?? valuation.btcPrice, price > 0 else { return nil }
-        return value / price
-    }
+        let btcPrice = hovered?.btcPrice ?? valuation.btcPrice
+        // 24H uses each coin's 24-hour change; longer ranges compare the chart's ends.
+        let change: (amount: Double, percent: Double?)? = if range == .day {
+            (valuation.change24h, valuation.change24hPercent)
+        } else if let first = points.first, let last = points.last, points.count > 1 {
+            (last.value - first.value, first.value > 0 ? (last.value - first.value) / first.value * 100 : nil)
+        } else {
+            nil
+        }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(hovered.map { $0.date.formatted(.dateTime.weekday(.abbreviated).day().month().hour().minute()) }
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(hovered.map { $0.date.formatted(.dateTime.weekday(.abbreviated).day().month().year().hour().minute()) }
                  ?? (headerCurrency == valuation.base ? "Net Worth" : "Net Worth · \(headerCurrency)"))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Text(Format.money(inHeaderCurrency(hovered?.value ?? valuation.total), headerCurrency))
+            Text(Format.money(inHeaderCurrency(value), headerCurrency))
                 .font(.system(size: 46, weight: .semibold, design: .rounded))
                 .monospacedDigit()
                 .contentTransition(.numericText())
@@ -97,23 +91,18 @@ struct OverviewView: View {
                 }
                 .pointerStyle(.link)
                 .help(secondary == valuation.base ? "" : "Click to show in \(headerCurrency == valuation.base ? secondary : valuation.base)")
-            if let btcWorth {
-                Text("≈ \(Format.btc(btcWorth))")
+            if let btcPrice, btcPrice > 0 {
+                Text("≈ \(Format.btc(value / btcPrice))")
                     .font(.title3)
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
                     .contentTransition(.numericText())
                     .privacySensitive()
             }
-            if let (amount, percent) = rangeChange {
+            if let change {
                 HStack(spacing: 6) {
-                    ChangeLabel(percent: percent, amount: inHeaderCurrency(amount), currency: headerCurrency)
-                    Text("Past week").foregroundStyle(.secondary)
-                }
-            } else {
-                HStack(spacing: 6) {
-                    ChangeLabel(percent: valuation.change24hPercent, amount: inHeaderCurrency(valuation.change24h), currency: headerCurrency)
-                    Text("Today").foregroundStyle(.secondary)
+                    ChangeLabel(percent: change.percent, amount: inHeaderCurrency(change.amount), currency: headerCurrency)
+                    Text(range.label).foregroundStyle(.secondary)
                 }
             }
             if let profit = valuation.cryptoProfit {
@@ -138,66 +127,96 @@ struct OverviewView: View {
 
     // MARK: Chart
 
-    private var chart: some View {
+    private func chart(points: [HistoryPoint], hovered: HistoryPoint?) -> some View {
+        GroupBox("Performance") {
+            VStack(spacing: 8) {
+                // Kept out of the box's title: titles are read as plain text, hiding the picker
+                // from VoiceOver.
+                HStack {
+                    Spacer()
+                    Picker("Range", selection: $range) {
+                        ForEach(ChartRange.allCases) { Text($0.rawValue).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .fixedSize()
+                }
+                Group {
+                    if points.count > 1 {
+                        chartBody(points: points, hovered: hovered)
+                    } else if let progress = store.historyProgress {
+                        ProgressView("Loading price history… \(progress.done) of \(progress.total)")
+                    } else if let error = store.historyError, range.usesDailyPrices {
+                        VStack(spacing: 8) {
+                            Text(error).foregroundStyle(.secondary)
+                            Button("Try Again") { store.requestDailyHistory() }
+                        }
+                    } else if range.usesDailyPrices && !store.hasDailyHistory {
+                        ProgressView("Loading price history…")
+                    } else {
+                        Text("Not enough price history yet.").foregroundStyle(.secondary)
+                    }
+                }
+                .frame(height: 230)
+                .frame(maxWidth: .infinity)
+            }
+            .padding(.top, 4)
+        }
+    }
+
+    private func chartBody(points: [HistoryPoint], hovered: HistoryPoint?) -> some View {
         let values = points.map(\.value)
         let lo = values.min() ?? 0, hi = values.max() ?? 1
         let pad = max((hi - lo) * 0.15, hi * 0.001, 0.01)
         let domain = (lo - pad)...(hi + pad)
         let tint: Color = (values.last ?? 0) >= (values.first ?? 0) ? .green : .red
 
-        return GroupBox {
-            Chart {
-                ForEach(points) { point in
-                    AreaMark(x: .value("Time", point.date),
-                             yStart: .value("Base", domain.lowerBound),
-                             yEnd: .value("Value", point.value))
-                        .foregroundStyle(.linearGradient(colors: [tint.opacity(0.22), tint.opacity(0.0)],
-                                                         startPoint: .top, endPoint: .bottom))
-                        .interpolationMethod(.monotone)
-                    LineMark(x: .value("Time", point.date), y: .value("Value", point.value))
-                        .foregroundStyle(tint)
-                        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
-                        .interpolationMethod(.monotone)
-                }
-                if let hovered {
-                    RuleMark(x: .value("Time", hovered.date))
-                        .foregroundStyle(.secondary.opacity(0.5))
-                    PointMark(x: .value("Time", hovered.date), y: .value("Value", hovered.value))
-                        .foregroundStyle(tint)
-                        .symbolSize(60)
-                }
+        return Chart {
+            ForEach(points) { point in
+                AreaMark(x: .value("Time", point.date),
+                         yStart: .value("Base", domain.lowerBound),
+                         yEnd: .value("Value", point.value))
+                    .foregroundStyle(.linearGradient(colors: [tint.opacity(0.22), tint.opacity(0.0)],
+                                                     startPoint: .top, endPoint: .bottom))
+                    .interpolationMethod(.monotone)
+                LineMark(x: .value("Time", point.date), y: .value("Value", point.value))
+                    .foregroundStyle(tint)
+                    .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .interpolationMethod(.monotone)
             }
-            .chartYScale(domain: domain)
-            .chartXSelection(value: $hoverDate)
-            .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: range == .week ? 7 : 6)) { _ in
-                    AxisGridLine().foregroundStyle(.quaternary)
-                    AxisValueLabel(format: range == .week ? .dateTime.weekday(.abbreviated) : .dateTime.hour())
-                }
+            if let hovered {
+                RuleMark(x: .value("Time", hovered.date))
+                    .foregroundStyle(.secondary.opacity(0.5))
+                PointMark(x: .value("Time", hovered.date), y: .value("Value", hovered.value))
+                    .foregroundStyle(tint)
+                    .symbolSize(60)
             }
-            .chartYAxis {
-                AxisMarks(position: .trailing, values: .automatic(desiredCount: 4)) { value in
-                    AxisGridLine().foregroundStyle(.quaternary)
-                    AxisValueLabel {
-                        if let v = value.as(Double.self), !hideBalances {
-                            Text(Format.compactMoney(v, valuation.base))
-                        }
+        }
+        .chartYScale(domain: domain)
+        .chartXSelection(value: $hoverDate)
+        .chartXAxis {
+            AxisMarks(values: .automatic(desiredCount: range == .week ? 7 : 6)) { _ in
+                AxisGridLine().foregroundStyle(.quaternary)
+                AxisValueLabel(format: axisFormat)
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .trailing, values: .automatic(desiredCount: 4)) { value in
+                AxisGridLine().foregroundStyle(.quaternary)
+                AxisValueLabel {
+                    if let v = value.as(Double.self), !hideBalances {
+                        Text(Format.compactMoney(v, valuation.base))
                     }
                 }
             }
-            .frame(height: 230)
-            .padding(.top, 8)
-        } label: {
-            HStack {
-                Text("Performance")
-                Spacer()
-                Picker("Range", selection: $range) {
-                    ForEach(ChartRange.allCases) { Text($0.rawValue).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .fixedSize()
-            }
+        }
+    }
+
+    private var axisFormat: Date.FormatStyle {
+        switch range {
+        case .day: .dateTime.hour()
+        case .week: .dateTime.weekday(.abbreviated)
+        case .yearToDate, .year: .dateTime.month(.abbreviated)
         }
     }
 

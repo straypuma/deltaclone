@@ -198,11 +198,32 @@ struct NFTQuote: Codable, Hashable {
     var imageURL: URL?
 }
 
+struct PricePoint: Codable, Hashable {
+    var date: Date
+    var price: Double           // USD
+}
+
 struct MarketData: Codable {
     var coins: [String: CoinQuote] = [:]
     var nfts: [String: NFTQuote] = [:]
     var usdRates: [String: Double] = ["USD": 1]  // 1 USD = x units of currency
     var updated: Date?
+    /// Daily prices per coin for the YTD and 1Y chart ranges, oldest first.
+    var daily: [String: [PricePoint]] = [:]
+    var dailyUpdated: [String: Date] = [:]
+
+    init() {}
+
+    // Tolerate caches written by older versions.
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        coins = try c.decodeIfPresent([String: CoinQuote].self, forKey: .coins) ?? [:]
+        nfts = try c.decodeIfPresent([String: NFTQuote].self, forKey: .nfts) ?? [:]
+        usdRates = try c.decodeIfPresent([String: Double].self, forKey: .usdRates) ?? ["USD": 1]
+        updated = try c.decodeIfPresent(Date.self, forKey: .updated)
+        daily = try c.decodeIfPresent([String: [PricePoint]].self, forKey: .daily) ?? [:]
+        dailyUpdated = try c.decodeIfPresent([String: Date].self, forKey: .dailyUpdated) ?? [:]
+    }
 }
 
 // MARK: - Preferences
@@ -215,6 +236,7 @@ enum Pref {
     static let menuBarShowsTotal = "menuBarShowsTotal"
     static let apiKey = "coingeckoAPIKey"
     static let lastSection = "lastSection"
+    static let chartRange = "chartRange"
     static let secondaryCurrency = "secondaryCurrency"  // clicking net worth switches to it
     static let showsSecondaryCurrency = "showsSecondaryCurrency"
     static let storeInICloud = "storeInICloud"          // what the user chose in Settings

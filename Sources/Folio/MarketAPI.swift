@@ -105,6 +105,23 @@ struct MarketAPI: Sendable {
                         imageURL: r.image?.small2x ?? r.image?.small)
     }
 
+    /// Daily USD prices for the past 365 days (the free API's limit).
+    func dailyHistory(id: String) async throws -> [PricePoint] {
+        #if DEBUG
+        if TestMode.stubsMarket { return MarketFixtures.daily(id) }
+        #endif
+        struct Response: Decodable { let prices: [[Double]] }
+        let data = try await coingecko("coins/\(id)/market_chart", [
+            .init(name: "vs_currency", value: "usd"),
+            .init(name: "days", value: "365"),
+            .init(name: "interval", value: "daily"),
+        ])
+        return try JSONDecoder().decode(Response.self, from: data).prices.compactMap { pair in
+            guard pair.count == 2 else { return nil }
+            return PricePoint(date: Date(timeIntervalSince1970: pair[0] / 1000), price: pair[1])
+        }
+    }
+
     func exchangeRates() async throws -> [String: Double] {
         #if DEBUG
         if TestMode.stubsMarket { return MarketFixtures.usdRates }

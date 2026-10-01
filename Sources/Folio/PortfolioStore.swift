@@ -15,6 +15,9 @@ final class PortfolioStore {
     /// Set when the portfolio exists but couldn't be opened. Nothing is shown or saved
     /// until it's resolved, so an empty portfolio can never overwrite the real one.
     private(set) var storageProblem: String?
+    /// Progress while daily price history (for the longer chart ranges) downloads.
+    private(set) var historyProgress: (done: Int, total: Int)?
+    private(set) var historyError: String?
 
     @ObservationIgnored private var lastAttempt: Date?
     @ObservationIgnored private var refreshQueued = false
@@ -175,6 +178,55 @@ final class PortfolioStore {
         }
     }
 
+    // MARK: - Daily price history
+
+    /// Coins whose daily prices the charts need: everything held, plus BTC (net worth in BTC)
+    /// and ETH (NFT floors are priced in it).
+    var historyCoinIDs: [String] {
+        var ids = Set(portfolio.crypto.map(\.coinID))
+        ids.insert("bitcoin")
+        if !portfolio.nfts.isEmpty { ids.insert("ethereum") }
+        return ids.sorted()
+    }
+
+    var hasDailyHistory: Bool {
+        historyCoinIDs.allSatisfy { !(market.daily[$0] ?? []).isEmpty }
+    }
+
+    /// Starts loading daily prices if needed. Runs on its own, so leaving the chart or switching
+    /// ranges doesn't cancel a download halfway.
+    func requestDailyHistory() {
+        Task { await loadDailyHistory() }
+    }
+
+    /// Fetches a year of daily prices for any coin not updated in the last day. Requests are spaced
+    /// out to stay inside the free API's rate limit; older cached days are kept.
+    func loadDailyHistory(spacing: Duration = .seconds(2)) async {
+        guard historyProgress == nil else { return }
+        let stale = historyCoinIDs.filter { id in
+            market.dailyUpdated[id].map { Date.now.timeIntervalSince($0) > 20 * 3600 } ?? true
+        }
+        guard !stale.isEmpty else { return }
+        historyError = nil
+        historyProgress = (0, stale.count)
+        let api = MarketAPI(apiKey: Pref.defaults.string(forKey: Pref.apiKey))
+        for (index, id) in stale.enumerated() {
+            if index > 0 { try? await Task.sleep(for: spacing) }
+            do {
+                let fresh = try await api.dailyHistory(id: id)
+                let firstNew = fresh.first?.date ?? .distantFuture
+                market.daily[id] = (market.daily[id] ?? []).filter { $0.date < firstNew } + fresh
+                market.dailyUpdated[id] = .now
+                historyProgress = (index + 1, stale.count)
+            } catch {
+                historyError = "Couldn't load price history: \(error.localizedDescription)"
+                break
+            }
+        }
+        historyProgress = nil
+        write(market, to: Self.marketURL)
+    }
+
     private func runRefreshLoop() async {
         while !Task.isCancelled {
             let minutes = Pref.defaults.object(forKey: Pref.refreshMinutes) as? Int ?? 5
@@ -182,6 +234,13 @@ final class PortfolioStore {
             let wait = lastError == nil ? interval : min(interval, 60)  // retry failures sooner
             if lastAttempt.map({ Date.now.timeIntervalSince($0) >= wait }) ?? true {
                 await refresh()
+                // Top up the longer chart ranges quietly, well spaced out, after prices are in.
+                if lastError == nil {
+                    Task {
+                        try? await Task.sleep(for: .seconds(20))
+                        await loadDailyHistory(spacing: .seconds(6))
+                    }
+                }
             }
             try? await Task.sleep(for: .seconds(15))
         }
@@ -361,7 +420,7 @@ final class PortfolioStore {
         #endif
         let base = Pref.defaults.string(forKey: Pref.baseCurrency) ?? Pref.defaultCurrency
         let valuation = valuation(in: base)
-        let history = valuation.history.map(\.value)
+        let history = valuation.history(.week).map(\.value)
         let step = max(1, history.count / 56)  // ~every 3 hours is plenty for a small chart
         let sampled = history.count > 1
             ? stride(from: history.count - 1, through: 0, by: -step).reversed().map { history[$0] }

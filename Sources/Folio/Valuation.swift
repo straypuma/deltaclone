@@ -91,7 +91,9 @@ struct Valuation {
     let total: Double
     let change24h: Double
     let change24hPercent: Double?
-    let history: [HistoryPoint]
+    let portfolio: Portfolio
+    let market: MarketData
+    let usdToBase: Double?
     let assets: [AssetLine]
     /// All-time profit across crypto holdings whose cost is known (or estimated).
     let cryptoProfit: (total: Double, percent: Double?, includesEstimates: Bool)?
@@ -189,35 +191,10 @@ struct Valuation {
 
         usdRates = m.usdRates
         btcPrice = toBase(m.coins["bitcoin"]?.price)
-        history = Self.history(portfolio: p, market: m, usdToBase: usdToBase,
-                               flat: totals[.cash] ?? 0, current: total, currentBTC: btcPrice)
+        portfolio = p
+        market = m
+        self.usdToBase = usdToBase
         assets = Self.assetLines(crypto: crypto, cash: cash, nfts: nftGroups)
-    }
-
-    /// Last 7 days of portfolio value using current quantities and CoinGecko's hourly sparklines.
-    private static func history(portfolio p: Portfolio, market m: MarketData, usdToBase: Double?,
-                                flat: Double, current: Double, currentBTC: Double?) -> [HistoryPoint] {
-        guard let usdToBase else { return [] }
-        var series: [(quantity: Double, prices: [Double])] = []
-        for h in p.crypto {
-            if let s = m.coins[h.coinID]?.sparkline, s.count > 1 { series.append((h.balance, s)) }
-        }
-        if let eth = m.coins["ethereum"]?.sparkline, eth.count > 1 {
-            for c in NFTCollection.allCases {
-                let count = p.nfts.filter { $0.collection == c }.count
-                if count > 0, let floor = m.nfts[c.rawValue]?.floorETH { series.append((Double(count) * floor, eth)) }
-            }
-        }
-        guard let n = series.map(\.prices.count).min(), n > 1 else { return [] }
-        let end = m.updated ?? .now
-        let btc = m.coins["bitcoin"]?.sparkline ?? []
-        var points = (0..<n).map { i in
-            let usd = series.reduce(0) { $0 + $1.quantity * $1.prices[$1.prices.count - n + i] }
-            return HistoryPoint(date: end.addingTimeInterval(-Double(n - 1 - i) * 3600), value: usd * usdToBase + flat,
-                                btcPrice: btc.count >= n ? btc[btc.count - n + i] * usdToBase : nil)
-        }
-        points[n - 1] = HistoryPoint(date: end, value: current, btcPrice: currentBTC)
-        return points
     }
 
     private static func assetLines(crypto: [CryptoRow], cash: [CashRow], nfts: [NFTGroup]) -> [AssetLine] {
